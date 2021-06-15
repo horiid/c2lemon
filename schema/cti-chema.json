@@ -1,0 +1,108 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Schema title",
+    "$id": "https://www.isl.im.dendai.ac.jp/cti/schema/x-ict-isac.jp.json",
+    "description": "ICT-ISAC Japan CTI sharing extention schema",
+    "type": "object",
+    "properties": {
+        "x-ict-isac.jp": {
+            "description": "The propertyName description",
+            "type": "object",
+            "properties": {
+                "monitoring": {"$ref": "#/definitions/monitoring_t"},
+                "process-time": {
+                    "type": "object",
+                    "properties": {
+                        "system-name": {"type": "string"},
+                        "start-time": {"type": "string"},
+                        "end-time": {"type": "string"}
+                    }
+                },
+                "id": {"type": "string"},
+                "submit-time": {"type": "string"}
+            }
+        }
+    },
+    "definitions": {
+        "monitoring_t": {
+            "type": "object",
+            "properties": {
+                "input": {"type": "string"},
+                "domain-name": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "ipv4-addr": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "file": {
+                    "type": "object",
+                    "properties": {
+                        "file-type": {"type": "string"},
+                        "name": {"type": "string"},
+                        "hashes": {
+                            "properties": {
+                                "md5": {"type": "string"},
+                                "sha1": {"type": "string"},
+                                "sha256": {"type": "string"}
+                            }
+                        }
+                    }
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file-type": {"type": "string"},
+                            "name": {"type": "string"},
+                            "md5": {"type": "string"},
+                            "sha1": {"type": "string"},
+                            "sha256": {"type": "string"}
+                        }
+                    }
+                },
+                "network-traffic": {
+                    "type": "object",
+                    "properties": {
+                        "src_port": {"type": "string"},
+                        "dst_port": {"type": "string"}
+                    }
+                },
+                "ping-ext": {
+                    "type": "object",
+                    "properties": {
+                        "lost": {"type": "string"},
+                        "ttl": {"type": "integer"},
+                        "rtt": {"type": "string"}
+                    }
+                },
+                "http-request-ext": {
+                    "type": "object",
+                    "properties": {
+                        "request_method": {"type": "string"},
+                        "request_value": {"type": "string"},
+                        "request_version": {"type": "string"},
+                        "request_header": {
+                            "type": "object",
+                            "properties": {
+                                "Accept-Encoding": {"type": "string"},
+                                "User-Agent": {"type": "string"},
+                                "Host": {"type": "string"}
+                            }
+                        }
+                    }
+                },
+                "http-response-ext": {
+                    "type": "object",
+                    "properties": {
+                        "status_code": {"type": "integer"},
+                        "reason_phrase": {"type": "string"}
+                    }
+                },
+                "observe-time": {"type": "string"}
+            }
+        }
+    }
+}

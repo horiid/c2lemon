@@ -1,0 +1,46 @@
+{
+    "x-ict-isac.jp": {
+      "id": "ABCDE",
+      "submit-time": "ABCDE",
+      "monitoring": {
+        "input": "ABCDEFGHIJKLMNO",
+        "domain-name": [],
+        "ipv4-addr": [],
+        "file": {
+          "file-type": "ABCDEFGHIJKLMNOPQRSTUVWXYZABC",
+          "name": "ABCDEFGHIJKLMNOPQRSTUVWX",
+          "hashes": false
+        },
+        "files": [],
+        "network-traffic": {
+          "src_port": "ABCDEFGHIJKLMNOPQRSTUVWXYZA",
+          "dst_port": "ABCDEFGHIJKLMNOPQRSTUVWXY"
+        },
+        "ping-ext": {
+          "lost": "ABCDEFGHIJKLMNOPQRSTUVWX",
+          "ttl": 80,
+          "rtt": "ABCDEFGHIJKLMNO"
+        },
+        "http-request-ext": {
+          "request_method": "ABCDEFGHIJKLMNO",
+          "request_value": "ABCDEFG",
+          "request_version": "ABCDEFGHIJKLMNOPQRS",
+          "request_header": {
+            "Accept-Encoding": "ABCDE",
+            "User-Agent": "ABCDEFGHIJKLM",
+            "Host": "ABCDEFGHIJKLMNOPQR"
+          }
+        },
+        "http-response-ext": {
+          "status_code": -90,
+          "reason_phrase": "ABCDEFGHIJKLMNO"
+        },
+        "observe-time": "ABCDEFGHIJKLMNOPQRSTUVWXYZA"
+      },
+      "process-time": {
+        "system-name": "ABCDEFGHIJKLM",
+        "start-time": "ABCDEFGHIJKL",
+        "end-time": "ABCDEFGHIJKLMNO"
+      }
+    }
+  }

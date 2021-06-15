@@ -1,0 +1,47 @@
+{
+    "input": "",
+    "domain_name": [],
+    "ipv4_addr": [],
+    "file": {
+        "file-type": "",
+        "name": "",
+        "hashes": {
+            "md5": "",
+            "sha1": "",
+            "sha256": ""
+        }
+    },
+    "files": [
+        {
+            "file-type": "",
+            "name": "",
+            "md5": "",
+            "sha1": "",
+            "sha256": ""
+        }
+    ],
+    "network-traffic": {
+        "src_port": "",
+        "dst_port": ""
+    },
+    "ping-ext": {
+        "lost": "",
+        "ttl": 0,
+        "rtt": ""
+    },
+    "http-request-ext": {
+        "request_method": "",
+        "request_value": "",
+        "request_version": "",
+        "request_header": {
+            "Accept-Encoding": "",
+            "User-Agent": "",
+            "Host": ""
+        }
+    },
+    "http-response-ext": {
+        "status_code": 0,
+        "reason_phrase": ""
+    },
+    "observe-time": ""
+}
