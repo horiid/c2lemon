@@ -1,0 +1,9 @@
+c2.isl.tdu.csv  # Threat list collected from 
+                # general incorporated association and 
+                # Information Security Lab, Tokyo Denki University
+
+/list/          # Ignores threat information directory for security
+/threatCSV/     # threat CSV files
+__pycache__     # Automatically created python cache directory
+/c2lemon/       # Directory for python venv
+.vscode         # Visual Studio Code setting directory
