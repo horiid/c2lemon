@@ -6,4 +6,4 @@ c2.isl.tdu.csv  # Threat list collected from
 /threatCSV/     # threat CSV files
 __pycache__     # Automatically created python cache directory
 /c2lemon/       # Directory for python venv
-.vscode         # Visual Studio Code setting directory
+/.vscode/        # Visual Studio Code setting directory
