@@ -57,11 +57,14 @@ def main():
         ping, mon = monitor(host=input, src_port=src_port, dst_port=dst_port)
         print(ping, mon)
 
-        
-        if mon.raw.version == 11:
-            http_version = 'http/1.1' 
-        elif mon.version == 10:
-            http_version = 'http/1.0'
+        http_version = 'http/1.1'
+        try:
+            # try to get version of http. If the target doesn't respond, 
+            # mon would be None and if condition raise attr error.
+            if mon.raw.version == 10:
+                http_version = 'http/1.0'
+        except AttributeError:
+            http_version = ""
         http_request_ext = {'request-method': 'get', 'request-value': '',
         'request-version': http_version, 'request-header': {
             ""
