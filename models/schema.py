@@ -86,7 +86,7 @@ class ProcessStat():
     def end(self, end):
         self.end = end
 
-# Thrat info expression format defined by ICT-Isac. 
+# Thrat info expression format based on the definition of ICT-Isac. 
 class X_ICT_Isac_Cti():
     def __init__(self, submit_time: str=None, proc: ProcessStat=None, mon: MonitoringStat=None) -> None:
         self.id = str(uuid.uuid4())

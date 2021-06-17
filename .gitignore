@@ -12,3 +12,5 @@ __pycache__
 
 # Visual Studio Code setting directory
 .vscode
+# data directory is a archived data of responses.
+/data/

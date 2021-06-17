@@ -52,7 +52,7 @@ class CsvParser():
                    header[CsvParseIndex.HASH.value]          == '#hash'        and \
                    header[CsvParseIndex.FILE_TYPE.value]     == '#file type'
         if not validate:
-            print('ERROR: Your header does not follow the CSV format.')
+            print('ERROR: Your column header does not follow the specification.')
             return False
         else:
             return True
@@ -90,15 +90,16 @@ class SourcePortAdapter(HTTPAdapter):
 
 
 # Manages of send_ping and send_http
-def monitor(host: str, src_port=None, dst_port="80"):
+def monitor(host: str, src_port=None, dst_port=80):
     print("Target host:", host)
-    sp = send_ping(host)
-    sh = send_http(host=host, src_port=src_port, dst_port=dst_port)
-    if type(sh) is str:
-        print("\nERROR in send http:", sh)
+    s_ping = send_ping(host)
+    s_http = send_http(host=host, src_port=src_port, dst_port=dst_port)
+    if type(s_http) is str:
+        print("\nERROR in send http:", s_http)
     else:
-        print("\nsend http:", sh.status_code, sh.reason)
-    return sp, sh
+        print("\nsend http:", s_http.status_code, s_http.reason)
+        s_http = (s_http.status_code, s_http.reason)
+    return s_ping, s_http 
 
 # send ping
 def send_ping(host, times="4"):
@@ -121,19 +122,28 @@ def send_ping(host, times="4"):
         
         # fetch ping loss rate
         stdout = ping.stdout.decode(chardet.detect(ping.stdout)["encoding"])
-        rtt = re.search(rtt_pattern, stdout)
-        loss = re.search(loss_pattern, stdout)
-        ttl = re.search(ttl_pattern, stdout, re.IGNORECASE)
-        print("loss rate =", loss.group(1))
-        print("ttl =", ttl.group(1))
-        print("rtt =", rtt.group(1))
-        return {"loss": loss.group(1), "ttl": ttl.group(1), "rtt": rtt.group(1)}
+        # Check Packet loss rate
+        try:
+            loss = re.search(loss_pattern, stdout).group(1)
+        except AttributeError:
+            loss = ""
+        # Check Time-to-live
+        try:
+            ttl = re.search(ttl_pattern, stdout, re.IGNORECASE).group(1)
+        except AttributeError:
+            ttl = 0
+        # Check Round time trip
+        try:
+            rtt = re.search(rtt_pattern, stdout).group(1) + "ms"
+        except AttributeError:
+            rtt = ""
+        return {"loss": loss, "ttl": int(ttl), "rtt": rtt}
     except  subprocess.CalledProcessError:
-        return stdout
+        return {"loss": "", "ttl": 0, "rtt": ""}
 
 
 # send HTTP GET request and returns response
-def  send_http(host: str, src_port=None, dst_port=80):
+def  send_http(host: str, src_port:int=None, dst_port:int=80, header:dict=None):
     if dst_port == 80:
         query = "http://"
     elif dst_port == 443:
