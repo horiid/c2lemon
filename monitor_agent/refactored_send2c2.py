@@ -58,7 +58,8 @@ def main():
         is_file_single = False
         file_list = row[csvidx.FILE_TYPE].split(',')
         print("file list: {}".format(file_list))
-        if len(file_list) == 1: is_file_single = True
+        if len(file_list) == 1 and file_list[0] != '': is_file_single = True
+        print("is_file_single:", is_file_single)
         # do file count processing here
 
 
@@ -77,15 +78,18 @@ def main():
         # send ping and http GET method
         ping, http_ext = monitor(host=input, src_port=src_port, dst_port=dst_port)
         print(ping, http_ext)
-        
-        http_version = 'http/1.1'
-        try:
-            # try to get version of http. If the target doesn't respond, 
-            # mon would be None and if condition raise attr error.
-            if http_ext.raw.version == 10:
-                http_version = 'http/1.0'
-        except AttributeError:
-            http_version = ""
+
+        http_version = ''
+        http_response_ext = {'status_code': '', 'reason_phrase': ''}
+        # Received HTTP response
+        if type(http_ext) is not None:
+            http_response_ext['status_code'] = http_ext[0]
+            http_response_ext['reason_phrase'] = http_ext[1]
+            if http_ext[2] == 10:
+                http_version = "http/1.0"
+            elif http_ext[2] == 11:
+                http_version = "http/1.1"
+            # else it is unknown.
         
         try:
             req_value = row[csvidx.URL].split('//',1)[1].split('/', 1)[1]
@@ -94,7 +98,6 @@ def main():
             req_value = ''
         http_request_ext = {'request-method': 'get', 'request-value': req_value,
         'request-version': http_version, 'request-header': req_header}
-        http_response_ext = {'status_code': http_ext[0], 'reason_phrase': http_ext[1]}
         monitor_ = MonitoringStat()
         # Append data to MonitoringStat instance
         monitor_.input = input

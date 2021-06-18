@@ -94,11 +94,11 @@ def monitor(host: str, src_port=None, dst_port=80):
     print("Target host:", host)
     s_ping = send_ping(host)
     s_http = send_http(host=host, src_port=src_port, dst_port=dst_port)
-    if type(s_http) is str:
-        print("\nERROR in send http:", s_http)
+    if type(s_http) is None:
+        print("\nERROR in send_http")
     else:
         print("\nsend http:", s_http.status_code, s_http.reason)
-        s_http = (s_http.status_code, s_http.reason)
+        s_http = (s_http.status_code, s_http.reason, s_http.raw.version)
     return s_ping, s_http 
 
 # send ping
@@ -163,8 +163,8 @@ def  send_http(host: str, src_port:int=None, dst_port:int=80, header:dict=None):
         response = sess.get(query, timeout=(4.0,8.0))
     except requests.ConnectionError:
         print('ERROR: Connection Error')
-        return "Connection Error"
+        return None
     except requests.Timeout:
         print('ERROR: Timeout')
-        return "Timeout"
+        return None
     return response
