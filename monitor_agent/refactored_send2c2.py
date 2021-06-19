@@ -1,8 +1,8 @@
 import argparse, datetime, pprint, json, sys
 sys.path.append("../")
 from json.decoder import JSONDecodeError, JSONDecoder
-from monitorutils import CsvParser, monitor
-from monitorutils import CsvParseIndex as csvidx
+from .monitorutils import CsvParser, monitor
+from .monitorutils import CsvParseIndex as csvidx
 from models.schema import ProcessStat, MonitoringStat, X_ICT_Isac_Cti
 from random import randint
 
