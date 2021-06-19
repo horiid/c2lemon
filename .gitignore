@@ -1,20 +1,20 @@
 # Ignores threat information directory for security
-/list/
+list/
 
 # threat CSV files
-/threatCSV/
+threatCSV/
 
 # Automatically created python cache directory
 __pycache__     
 
 # Directory for python venv
-/c2lemon/       
+c2lemon/       
 
 # Visual Studio Code setting directory
 .vscode
 
 # data directory is a archived data of responses.
-/data/
+data/
 
 # ignore monitor agent. It has its own repo independently.
-/monitor_agent/
+monitor_agent/
