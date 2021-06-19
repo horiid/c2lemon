@@ -15,10 +15,12 @@ def dump_cti_json(mon: MonitoringStat=None):
 
 
 def main():
+    HTTP_ = 80
+    HTTPS_ = 443
     # parse arguments
     parser = argparse.ArgumentParser(description="Monitor agent for sending ping and http request")
     parser.add_argument('c2list', help="CSV file showing lists of C2 servers")
-    parser.add_argument('port', type=int, help="Specify destination port number. 80 by default.")
+    parser.add_argument('port', type=int, help="Specify destination port number. HTTP_ by default.")
     args = parser.parse_args()
 
     # get the executed time and set it to the filename
@@ -73,7 +75,20 @@ def main():
             pass # if there's no hashes, just pass.
         # Preprocessing for  sending data to C2 servers
         src_port = randint(49152, 65535)
-        dst_port = int(row[csvidx.PORT]) if not row[csvidx.PORT] == '' else 80
+        dst_port = None
+        # PORT is empty
+        if row[csvidx.PORT] == '':
+            dst_port = HTTP_
+        # PORT has multiple port number
+        elif "," in row[csvidx.PORT]:
+            dst_port = dst_port.split(',')
+            if "443" in dst_port:
+                dst_port = HTTPS_
+            else:
+                dst_port = HTTP_
+        else:
+            dst_port = HTTP_
+                
         network_traffic = {'src-port': src_port, 'dst-port': dst_port}
         # send ping and http GET method
         ping, http_ext = monitor(host=input, src_port=src_port, dst_port=dst_port)
