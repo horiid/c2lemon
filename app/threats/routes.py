@@ -1,27 +1,68 @@
-from app.threats import blueprint
-from flask import redirect, url_for, render_template, render_template_string
-import os, json, glob, re, collections, hashlib
+from concurrent import futures
 
-# /threats redirects to root directory(/).
+from flask.templating import render_template_string
+from app.threats import blueprint
+from flask import redirect, url_for, render_template, current_app
+from app.threats.util import *
+
+# access to /threats/ are redirected to /threats/idlist 
 @blueprint.route('/')
 def route_default():
-    return redirect(url_for('base_blueprint.id_list'))
+    return redirect(url_for('threats_blueprint.id_list'))
 
-@blueprint.route('/<string:threat_id>', methods=['GET'])
-def threats(threat_id):
-    return redirect(url_for('threats_blueprint.threat_summary', threat_id=threat_id))
-
-@blueprint.route('/<string:threat_id>/summary', methods=['GET'])
-def threat_summary(threat_id):
+# list up threat IDs
+@blueprint.route('/idlist', methods=['GET'])
+def id_list():
     # validate the config file
     is_valid=validate_dataset_path()
     if is_valid is not True:
         return redirect(url_for('base_blueprint.config'))
     
+    # read filenames in the dataset folder
+    id_list=list_ids(current_app.config['dataset_path'])
+    return render_template('idlist.html', id_list=id_list)
+
+# shows monitored year & month of the selected threat ID
+@blueprint.route('/<string:threat_id>', methods=['GET'])
+def threats(threat_id):
+    year_path = current_app.config['dataset_path'] + "\\" + threat_id
+    if not os.path.isdir(year_path):
+        return render_template("404.html"), 404
+    
+    year_months = {year: os.listdir(year_path+'/'+year) for year in os.listdir(year_path)}
+    # return render_template_string('<p>' + str(year_months) + '<p>')
+    return render_template('year_months.html', year_months=year_months, threat_id=threat_id)
+
+# visualization page
+@blueprint.route('/<string:threat_id>/<string:year>/<string:month>', methods=['GET'])
+def visualize(threat_id, year, month):
+    data_path = current_app.config['dataset_path'] + "/" + threat_id + "/" + year + "/" + month
+    files = resolve_to_full_path(data_path, os.listdir(data_path))
+    
+    # file IO threading
+    future_list = list()
+    with ThreadPoolExecutor() as executor:
+        for file in files:
+            zip_input_ping_http = executor.submit(extract_values, file)
+            future_list.append(zip_input_ping_http)
+    
+    hosts = dict()
+    for future in future_list:
+        # input is a new entry to hosts
+        if not future.result()['input'] in hosts:
+            hosts[future.result()['input']] = list()
+            hosts[future.result()['input']].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
+        else:
+            hosts[future.result()['input']].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
+    import pprint
+    pprint.pprint(hosts)
+    monitor_info={"threat_id": threat_id, "year": year, "month": month}
+    return render_template('summary.html', hosts=json.dumps(hosts), monitor_info=monitor_info)
+
+@blueprint.route('/<string:threat_id>/summary', methods=['GET'])
+def threat_summary(threat_id):
     # load file(s) from the path
-    path=open(os.path.abspath('./config.json'), 'r')
-    path=json.load(path)['dataset_path']
-    path=glob.glob(path+'/*'+threat_id+'*')
+    path=os.listdir(current_app.config['dataset_path']+'/*'+threat_id+'*')
     threat_file=open(path[0], 'r')
     threat_file=json.load(threat_file)
     
@@ -72,54 +113,6 @@ def threat_summary(threat_id):
     s_codes=json.dumps(s_codes),
     heatmap_data=json.dumps(heatmap_data))
 
-@blueprint.route('/idlist', methods=['GET'])
-def id_list():
-    # validate the config file
-    is_valid=validate_dataset_path()
-    if is_valid is not True:
-        return redirect(url_for('base_blueprint.config'))
-    
-    # read filenames in the dataset folder
-    path=open('./config.json', 'r')
-    path=json.load(path)
-    path=path['dataset_path']
-    threat_info=get_threat_info(path)
-    return render_template('idlist.html', threat_info=threat_info)
-
 @blueprint.route('/statistics', methods=['GET'])
 def statistics():
     return render_template('statistics.html')
-
-def validate_dataset_path():
-    # file does not exist
-    if not os.path.isfile('./config.json'):
-        print("The path is not found")
-        return False
-    
-    # validate key and value in the file
-    config=open(os.path.abspath('./config.json'), 'r')
-    config=json.load(config)
-    if 'dataset_path' in config:
-        return True
-    else:
-        return False
-
-def get_threat_info(path):
-    id_list=[]
-    last_updates=[]
-    files=glob.glob(path+"/*")
-    # extract a threat id and last updated date from file
-    for filename in files:
-        id_=re.sub('.json', '', filename)
-        id_=os.path.split(id_)[1]
-        id_list.append(id_)
-        with open(filename, 'r') as readf:
-            jsonf=json.load(readf)
-            last_updates.append(jsonf["data"][-1][0])
-    return zip(id_list, last_updates)
-
-def validate_host(addr, uri, hostlist):
-    arg = addr + uri
-    hashed_host = hashlib.md5(arg)
-    if not hashed_host in hostlist:
-        hostlist.append(hashed_host)

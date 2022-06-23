@@ -18,3 +18,9 @@ data/
 
 # ignore monitor agent. It has its own repo independently.
 monitor_agent/
+
+# ignore cofigs. You choose where to place config file.
+dataset_conf.json
+
+# ignore data
+new_format/

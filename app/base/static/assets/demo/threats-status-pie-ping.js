@@ -2,20 +2,20 @@
 Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#292b2c';
 
-var ctx = document.getElementById('httpPieChart')
+var ctx = document.getElementById('pingPieChart')
 
 var ratioData = {}
 for(let host in hosts) {
     for(let i=0; i<hosts[host].length; i++) {
-        statusCode = hosts[host][i]['http-response-ext']['status_code'] === "" ? 0 : hosts[host][i]['http-response-ext']['status_code']
-        if(!(statusCode in ratioData)){
-            ratioData[statusCode.toString()] = 1
+        lossRate = hosts[host][i]['ping-ext']['loss'] === "" ? 0 : hosts[host][i]['ping-ext']['loss']
+        if(!(lossRate in ratioData)){
+            ratioData[lossRate.toString()] = 1
         }
-        ratioData[statusCode.toString()] += 1
+        ratioData[lossRate.toString()] += 1
     }
 }
 
-var httpPieChart = new Chart(ctx, {
+var pingPieChart = new Chart(ctx, {
     type: 'pie',
     data: {
         datasets: [{
@@ -32,4 +32,4 @@ var httpPieChart = new Chart(ctx, {
     }
 })
 
-console.log(httpPieChart)
+console.log(pingPieChart)

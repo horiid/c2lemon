@@ -106,44 +106,48 @@
             <div id="layoutSidenav_content">
                 <main>
                     <div class="container-fluid">
-                        <h1 class="mt-4">Threat ID List</h1>
+                        <h1 class="mt-4">Monitor Logs</h1>
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
-                            <li class="breadcrumb-item active">ID List</li>
+                            <li class="breadcrumb-item active"><a href="/threats/idlist">ID List</a></li>
+                            <li class="breadcrumb-item active">Monitor Logs</li>
                         </ol>
                         <div class="card mb-4">
                             <div class="card-body">
-                                List of <strong>Threat ID</strong> assigned by JPCERT, TDU-CSIRT and ISL(Information Security Laboratory).
-                                Click the ID in "Threat ID" column for further information.
+                                <strong>{{threat_id}}</strong>:
+                                As monotor logs are bundled monthly, so is done to the visualization. 
+                                Choose the month to visualize the logs.
                             </div>
                         </div>
                         <div class="card mb-4">
                             <div class="card-header">
                                 <i class="fas fa-table"></i>
-                                Observed Threat ID
+                                Monitor Logs
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">
-                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                        <thead>
-                                            <tr>
-                                                <th>Threat ID</th>
-                                            </tr>
-                                        </thead>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Threat ID</th>
-                                            </tr>
-                                        </tfoot>
-                                        <tbody>
-                                            {% for id in id_list %}
+                                    {% for year in year_months.keys() %}
+                                        <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                                            <thead>
                                                 <tr>
-                                                    {% set idlink="/threats/"+id %}
-                                                    <td><a href={{idlink}}>{{id}}</a></td>
+                                                    <th>{{year}}</th>
                                                 </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>{{year}}</th>
+                                                </tr>
+                                            </tfoot>
+                                            <tbody>
+                                                {% for month in year_months[year]%}
+                                                    <tr>
+                                                        {% set month_link="/threats/"+threat_id+"/"+ year + "/" + month %}
+                                                        <td><a href={{month_link}}>{{ month}}</a></td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>
