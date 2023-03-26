@@ -10,6 +10,9 @@
         <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
         <link href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" rel="stylesheet" crossorigin="anonymous" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/js/all.min.js" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="https://d3js.org/d3.v3.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.css" />
     </head>
     <body class="sb-nav-fixed">
         <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
@@ -115,103 +118,39 @@
                             <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
                             <li class="breadcrumb-item active">Charts</li>
                         </ol>
-                        <div class="card mb-4">
-                            <div class="card-body">
-                                Summary dashboard of Threat ID: <strong>{{monitor_info['threat_id']}}</strong> monitored in <strong>{{monitor_info['year']}}/{{monitor_info['month']}}</strong>
-                            </div>
-                        </div>
-
-                        {% block javascript %}
-                            <script>
-                                var hosts = JSON.parse({{hosts | tojson }})
-                                console.log(hosts)
-                            </script>
-                        {% endblock %}
+                    
                         <div class="row">
-                            <div class="col-md-12">
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <i class="fas fa-chart-line mr-1"></i>
-                                        HTTP Activity Chart
+                            {% for input in inputs %}
+                                <div class="col-md-12">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <i class="fas fa-chart-line mr-1"></i>
+                                            HTTP Activity Chart: {{ input }} 
+                                        </div>
+                                        <div class="card-body"><canvas id="http_{{ input }}" width="100%" height="20%"></canvas></div>
+                                        <div class="card-footer small text-muted">The graph shows the activity of {{ input }}, continually monitoring their HTTP responses.</div>
                                     </div>
-                                    <div class="card-body"><canvas id="httpLineChart" width="100%" height="20%"></canvas></div>
-                                    <div class="card-footer small text-muted">The graph shows the C2 servers' activity according to their HTTP responses.</div>
                                 </div>
-                            </div>
-                            <div class="col-md-12">
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <i class="fas fa-chart-line mr-1"></i>
-                                        Ping Activity Chart
+                                <div class="col-md-12">
+                                    <div class="card mb-4">
+                                        <div class="card-header">
+                                            <i class="fas fa-chart-line mr-1"></i>
+                                            Ping Activity Chart: {{ input }}
+                                        </div>
+                                        <div class="card-body"><canvas id="ping_{{ input }}" width="100%" height="20%"></canvas></div>
+                                        <div class="card-footer small text-muted">The graph shows the activity of {{ input }}, continually monitoring their Ping responses.</div>
                                     </div>
-                                    <div class="card-body"><canvas id="pingLineChart" width="100%" height="20%"></canvas></div>
-                                    <div class="card-footer small text-muted">The graph shows the C2 servers' activity according to their Ping responses.</div>
                                 </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="card mb-4">
-                                    <div class="card-header">
-                                        <i class="fas fa-chart-pie mr-1"></i>
-                                        HTTP Status Code
-                                    </div>
-                                    <div class="card-body"><canvas id="httpPieChart" width="100%" height="50%"></canvas></div>
-                                    <div class="card-footer small text-muted">The chart shows the response ratio of returned HTTP status codes.</div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
+                            {% endfor %}
+                            <div class="col-lg-12">
                                 <div class="card mb-4">
                                     <div class="card-header">
                                         <i class="fas fa-chart-pie mr-1"></i>
-                                        Ping Loss Rate
+                                        HTTP response activity
                                     </div>
-                                    <div class="card-body"><canvas id="pingPieChart" width="100%" height="50%"></canvas></div>
-                                    <div class="card-footer small text-muted">The chart shows the ratio of loss rate of ping.</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <i class="fas fa-table"></i>
-                                Data Table
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                        <thead>
-                                            <tr>
-                                                <th>Host</th>
-                                                <th>Ping</th>
-                                                <th>HTTP Status Code</th>
-                                                <th>Port</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tfoot>
-                                            <tr>
-                                                <th>Host</th>
-                                                <th>Ping</th>
-                                                <th>HTTP Status Code</th>
-                                                <th>Port</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </tfoot>
-                                        <tbody>
-                                            {% for anonymous, ping, status, port, date in zipped_data %}
-                                                <tr>
-                                                    <td>{{anonymous}}</td>
-                                                    {%if ping == 0 %}
-                                                    {% set ping_result="Received" %}
-                                                    {%elif ping== 1 %}
-                                                    {% set ping_result="No Response" %}
-                                                    {% endif %}
-                                                    <td>{{ping_result}}</td>
-                                                    <td>{{status}}</td>
-                                                    <td>{{port}}</td>
-                                                    <td>{{date}}</td>
-                                                </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
+                                    <div class="card-body" id="http-heatmap">
+                                    </div>
+                                    <div class="card-footer small text-muted">The graph shows the activity of C2 servers by HTTP responses.</div>
                                 </div>
                             </div>
                         </div>
@@ -251,10 +190,20 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.min.js" crossorigin="anonymous"></script>
         <script src="https://unpkg.com/chartjs-plugin-colorschemes"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
-        <script src= "{{ url_for('static', filename='assets/demo/threats-http-activity-line.js') }}"></script>
-        <script src= "{{ url_for('static', filename='assets/demo/threats-ping-activity-line.js') }}"></script>
-        <script src= "{{ url_for('static', filename='assets/demo/datatables-demo.js') }}" ></script>
-        <script src= "{{ url_for('static', filename='assets/demo/threats-status-pie.js') }}"></script>
-        <script src= "{{ url_for('static', filename='assets/demo/threats-status-pie-ping.js') }}"></script>
+        <script type="text/javascript">
+            var datas = {{data | tojson }}
+            var cal = new CalHeatMap();
+            var now = new Date();
+            cal.init({
+                itemSelector: '#http-heatmap',
+                domain: "month",
+                data: datas,
+                domainLabelFormat: '%Y-%m',
+                start: new Date(now.getFullYear(), now.getMonth() - 11),
+                cellSize: 15,
+                range: 12,
+                legend: [0.2, 0.4, 0.6, 0.8, 1.0],
+            });
+        </script>
     </body>
 </html>

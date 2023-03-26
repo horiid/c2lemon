@@ -1,5 +1,6 @@
 import os, json, hashlib, re
 from concurrent.futures import ThreadPoolExecutor
+from time import sleep
 
 def validate_dataset_path():
     # file does not exist
@@ -48,11 +49,21 @@ def extract_values(filename):
     ping = dict()
     http = dict()
     with open(filename) as f:
-        jsoned = json.load(f)['x-ict-isac.jp']['monitoring']
-        input = jsoned['input']
-        observed_time = jsoned['observe-time']
-        ping = jsoned['ping-ext']
-        http = jsoned['http-response-ext']
+        jsoned = json.load(f)
+        if 'x-ict-isac.jp' in jsoned:
+            monitoring = jsoned['x-ict-isac.jp']['monitoring']
+        elif 'monitoring' in jsoned:
+            monitoring = jsoned['monitoring']
+        else: return None
+        input = monitoring['input']
+        if 'observe-time' in monitoring: observed_time = monitoring['observe-time']
+        elif 'monitored_date' in jsoned: observed_time = jsoned['monitored_date']
+
+        if 'ping-ext'in monitoring: ping = monitoring['ping-ext']
+        elif 'ping_ext'in monitoring: ping = monitoring['ping_ext']
+        
+        if 'http-response-ext' in monitoring: http = monitoring['http-response-ext']
+        elif 'http_response_ext' in monitoring: http = monitoring['http_response_ext']
     return {"input": input, "observed-time": observed_time, "ping-ext": ping, "http-response-ext": http}
 
 # Use this to get full paths returned from os.listdir()

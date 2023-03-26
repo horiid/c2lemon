@@ -1,6 +1,4 @@
-from concurrent import futures
-
-from flask.templating import render_template_string
+from pprint import pprint
 from app.threats import blueprint
 from flask import redirect, url_for, render_template, current_app
 from app.threats.util import *
@@ -19,13 +17,13 @@ def id_list():
         return redirect(url_for('base_blueprint.config'))
     
     # read filenames in the dataset folder
-    id_list=list_ids(current_app.config['dataset_path'])
+    id_list=list_ids(current_app.config['dataset_path'] + "/tdu-c2monitor/ISL")
     return render_template('idlist.html', id_list=id_list)
 
 # shows monitored year & month of the selected threat ID
 @blueprint.route('/<string:threat_id>', methods=['GET'])
 def threats(threat_id):
-    year_path = current_app.config['dataset_path'] + "\\" + threat_id
+    year_path = current_app.config['dataset_path'] + "\\tdu-c2monitor\\ISL\\" + threat_id
     if not os.path.isdir(year_path):
         return render_template("404.html"), 404
     
@@ -36,30 +34,67 @@ def threats(threat_id):
 # visualization page
 @blueprint.route('/<string:threat_id>/<string:year>/<string:month>', methods=['GET'])
 def visualize(threat_id, year, month):
-    data_path = current_app.config['dataset_path'] + "/" + threat_id + "/" + year + "/" + month
-    files = resolve_to_full_path(data_path, os.listdir(data_path))
-    
+    # get all files from each monitor_location
+    # data_paths = {"folder path": "monitor location"}
+    path_loc = dict()
+    root = current_app.config['dataset_path']
+    for path in os.listdir(root):
+        # path = *-c2monitor
+        # identify the folders where the monitor data is stored
+        if "c2monitor" in path:
+            for location in os.listdir(root + "/" + path):
+                path_to_files = root + "/" + path + "/" + location + "/" +threat_id + "/" + year + "/" + month
+                if os.path.exists(path_to_files): path_loc[path_to_files] = location
+
     # file IO threading
-    future_list = list()
+    future_list = dict()
     with ThreadPoolExecutor() as executor:
-        for file in files:
-            zip_input_ping_http = executor.submit(extract_values, file)
-            future_list.append(zip_input_ping_http)
-    
+        for path, loc in path_loc.items():
+            for file in os.listdir(path):
+                zip_input_ping_http = executor.submit(extract_values, path + "/" + file)
+                future_list[zip_input_ping_http] = loc
     hosts = dict()
-    for future in future_list:
-        # input is a new entry to hosts
-        if not future.result()['input'] in hosts:
-            hosts[future.result()['input']] = list()
-            hosts[future.result()['input']].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
-        else:
-            hosts[future.result()['input']].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
-    import pprint
-    pprint.pprint(hosts)
+    for future, loc in future_list.items():
+        # input: ip addr, domain, url
+        if future.result() is None: continue
+        input = future.result()['input'].replace('http://', '')
+        # if hosts[input] is not created hosts[input][loc] is not created too
+        if not input in hosts:
+            hosts[input] = dict()
+            hosts[input][loc] = list()
+            hosts[input][loc].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
+        # hosts[input] is created but loc is a new location
+        elif loc not in hosts[input]:
+            hosts[input][loc] = list()
+            hosts[input][loc].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
+        # hosts[input] is created and loc already exists
+        else: hosts[input][loc].append({"observed-time": future.result()['observed-time'], "ping-ext": future.result()['ping-ext'], "http-response-ext": future.result()['http-response-ext']})
+
     monitor_info={"threat_id": threat_id, "year": year, "month": month}
-    return render_template('summary.html', hosts=json.dumps(hosts), monitor_info=monitor_info)
+    with open("dump.txt", "w") as f: json.dump(hosts, f, indent=4)
+    return render_template('detail.html', inputs=list(hosts.keys()), hosts=json.dumps(hosts), monitor_info=monitor_info)
 
 @blueprint.route('/<string:threat_id>/summary', methods=['GET'])
+def threat_summary(threat_id):
+    # load file(s) from the path
+    path_loc = dict()
+    root = current_app.config['dataset_path']
+    for path in os.listdir(root):
+        # path = *-c2monitor
+        # identify the folders where the monitor data is stored
+        if "c2monitor" in path:
+            for location in os.listdir(root + "/" + path):
+                print(root + "/" + path + "/" + location + "/" +threat_id)
+                path_to_files = root + "/" + path + "/" + location + "/" +threat_id
+    with open('D:\\monitor_data\\monthly_activity\\visualizer\\' + threat_id + ".json", 'r') as f:
+        data = json.load(f)
+    return render_template('summary.html', data=data)
+@blueprint.route('/statistics', methods=['GET'])
+def statistics():
+    return render_template('statistics.html')
+
+
+threat_summary_prototype='''
 def threat_summary(threat_id):
     # load file(s) from the path
     path=os.listdir(current_app.config['dataset_path']+'/*'+threat_id+'*')
@@ -112,7 +147,4 @@ def threat_summary(threat_id):
     threat_id=threat_id,
     s_codes=json.dumps(s_codes),
     heatmap_data=json.dumps(heatmap_data))
-
-@blueprint.route('/statistics', methods=['GET'])
-def statistics():
-    return render_template('statistics.html')
+'''

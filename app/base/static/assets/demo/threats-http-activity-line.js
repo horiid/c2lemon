@@ -1,61 +1,124 @@
 Chart.defaults.global.defaultFontFamily = '-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif';
 Chart.defaults.global.defaultFontColor = '#292b2c';
 
-var ctx = document.getElementById('httpLineChart')
-var httpChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        datasets: []
-    },
-    options: {
-        plugins: {
-            colorschemes: {
-                scheme: 'office.BlueII6'
-            }
+// input: ip address, domain or url
+// sort data by input and monitor location
+console.log("HOSTS",hosts)
+for (let host in hosts) {
+    console.log("LOCATIONS:", hosts[host])
+    var ctx_http = document.getElementById('http_' + host)
+    var httpChart = new Chart(ctx_http, {
+        type: 'line',
+        data: {
+            datasets: []
         },
-        scales: {
-            xAxes: [{
-                type: 'time',
-                time: {
-                    unit: 'day'
-                },
-                scaleLabel: {
-                    display: true,
-                },
-            }],
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true,
-                    suggestedMin: 0,
-                    suggestedMax: 599,
-                    stepSize: 100
-                },
-                scaleLabel: {
-                    display: true,
-                    labelString: 'Status Code'
-                },
-            }]
+        options: {
+            plugins: {
+                colorschemes: {
+                    scheme: 'office.BlueII6'
+                }
+            },
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    time: {
+                        unit: 'day'
+                    },
+                    scaleLabel: {
+                        display: true,
+                    },
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        suggestedMin: 0,
+                        suggestedMax: 599,
+                        stepSize: 100
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Status Code'
+                    },
+                }]
+            }
         }
-    }
-})
-
-for(let host in hosts) {
-    var hostData = []
-    for(let i=0; i < hosts[host].length; i++){
-        var statusCode = hosts[host][i]['http-response-ext']['status_code'] === "" ? 0 : hosts[host][i]['http-response-ext']['status_code'] 
-        hostData.push({
-            x: hosts[host][i]['observed-time'],
-            y: statusCode
-        })
-    }
-    httpChart.data.datasets.push({
-        label: host,
-        data: hostData,
-        fill: false,
-        lineTension: 0,
     })
-    httpChart.update()
+    var ctx_ping = document.getElementById('ping_' + host)
+    var pingChart = new Chart(ctx_ping, {
+        type: 'line',
+        data: {
+            datasets: []
+        },
+        options: {
+            plugins: {
+                colorschemes: {
+                    scheme: 'office.BlueII6'
+                }
+            },
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    time: {
+                        unit: 'day'
+                    },
+                    scaleLabel: {
+                        display: true,
+                    },
+                }],
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        stepSize: 25
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Loss Rate (%)'
+                    },
+                }]
+            }
+        }
+    })
+
+    for(let location in hosts[host]) {
+        // initialization
+        console.log('LOCATION:', location)
+        httpData = []
+        pingData = []
+        for(let data in hosts[host][location]) {
+            if ("loss" in hosts[host][location][data]['ping-ext']){
+                var lossRate = hosts[host][location][data]['ping-ext']['loss'] === "" ? 100 : hosts[host][location][data]['ping-ext']['loss'].replace(/%/g, "")
+            }
+            else if('lost' in hosts[host][location][data]['ping-ext']){
+                var lossRate = hosts[host][location][data]['ping-ext']['lost'] === "" ? 100 : hosts[host][location][data]['ping-ext']['lost'].replace(/%/g, "")
+            }
+            pingData.push({
+                x: hosts[host][location][data]['observed-time'],
+                y: lossRate
+            })
+            httpData.push({
+                x: hosts[host][location][data]['observed-time'],
+                y: hosts[host][location][data]['http-response-ext']['status_code'] === "" ? 0 : hosts[host][location][data]['http-response-ext']['status_code']
+            })
+        }
+        httpChart.data.datasets.push({
+            label: location,
+            data: httpData,
+            fill: false,
+            lineTension: 0,
+        })
+        pingChart.data.datasets.push({
+            label: location,
+            data: pingData,
+            fill: false,
+            lineTension: 0,
+        })
+        httpChart.update()
+        pingChart.update()
+    }
 }
+
 /* 
 
 httpChart.data.datasets.data.push({

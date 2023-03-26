@@ -5,7 +5,7 @@ import os, json
 
 @blueprint.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('statistics.html')
 
 @blueprint.route('/<template>')
 def route_template(template):
