@@ -17,13 +17,13 @@ def id_list():
         return redirect(url_for('base_blueprint.config'))
     
     # read filenames in the dataset folder
-    id_list=list_ids(current_app.config['dataset_path'] + "/tdu-c2monitor/ISL")
+    id_list=list_ids(current_app.config['dataset_path'] + "\\ISL01")
     return render_template('idlist.html', id_list=id_list)
 
 # shows monitored year & month of the selected threat ID
 @blueprint.route('/<string:threat_id>', methods=['GET'])
 def threats(threat_id):
-    year_path = current_app.config['dataset_path'] + "\\tdu-c2monitor\\ISL\\" + threat_id
+    year_path = current_app.config['dataset_path'] + "\\ISL01\\" + threat_id
     if not os.path.isdir(year_path):
         return render_template("404.html"), 404
     
@@ -41,10 +41,11 @@ def visualize(threat_id, year, month):
     for path in os.listdir(root):
         # path = *-c2monitor
         # identify the folders where the monitor data is stored
-        if "c2monitor" in path:
-            for location in os.listdir(root + "/" + path):
-                path_to_files = root + "/" + path + "/" + location + "/" +threat_id + "/" + year + "/" + month
-                if os.path.exists(path_to_files): path_loc[path_to_files] = location
+        if os.path.isdir(root + "/" + path):
+            for tid in os.listdir(root + "/" + path):
+                path_to_files = root + "/" + path + "/" +threat_id + "/" + year + "/" + month
+                if os.path.exists(path_to_files): path_loc[path_to_files] = path
+            print(path_to_files)
 
     # file IO threading
     future_list = dict()
@@ -79,6 +80,7 @@ def threat_summary(threat_id):
     # load file(s) from the path
     path_loc = dict()
     root = current_app.config['dataset_path']
+    heatmap_datapath = current_app.config['heatmap_datapath']
     for path in os.listdir(root):
         # path = *-c2monitor
         # identify the folders where the monitor data is stored
@@ -86,7 +88,7 @@ def threat_summary(threat_id):
             for location in os.listdir(root + "/" + path):
                 print(root + "/" + path + "/" + location + "/" +threat_id)
                 path_to_files = root + "/" + path + "/" + location + "/" +threat_id
-    with open('D:\\monitor_data\\monthly_activity\\visualizer\\' + threat_id + ".json", 'r') as f:
+    with open(heatmap_datapath + "/" + threat_id + ".json", 'r') as f:
         data = json.load(f)
     return render_template('summary.html', data=data)
 @blueprint.route('/statistics', methods=['GET'])
